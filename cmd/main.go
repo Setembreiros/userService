@@ -26,7 +26,11 @@ func main() {
 	log.Info().Msgf("Starting User Service in [%s] enviroment...\n", env)
 
 	provider := provider.NewProvider(env)
-	_ = provider.ProvideEventBus()
+	eventBus := provider.ProvideEventBus()
+	_, err := provider.ProvideKafkaConsumer(eventBus)
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
 func (app *app) configuringLog() {
