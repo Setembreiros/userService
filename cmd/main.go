@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 
+	"userservice/cmd/provider"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -22,6 +24,9 @@ func main() {
 	app.configuringLog()
 
 	log.Info().Msgf("Starting User Service in [%s] enviroment...\n", env)
+
+	provider := provider.NewProvider(env)
+	_ = provider.ProvideEventBus()
 }
 
 func (app *app) configuringLog() {
