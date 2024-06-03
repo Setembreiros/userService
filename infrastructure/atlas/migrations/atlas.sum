@@ -1,2 +1,4 @@
-h1:9J5S11bPhqyaalONG8hLnmYGy4Vr9l5W76gtxCIx7Po=
+h1:ppqgTH0nOHQBnHc1tIHOxxUMsLYcknlXYrakJfICid4=
 20240603103609_create_schema.sql h1:65FZ7DnaIyDB2YcYP/VmBlr9XzRQQU+CRes/kDyKKKU=
+20240603150227_create_users_table.sql h1:wFIUJza0II+ZZqZ0zFV1yWwsiiA7ifeZV0MKT+TTuDw=
+20240603151542_create_user_profiles_table.sql h1:HJfq/Z954HE8aXaeCX921yADRMpwECGxfOpdnWuMoFU=
