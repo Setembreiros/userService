@@ -2,27 +2,32 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"userservice/cmd/provider"
 	"userservice/infrastructure/atlas"
 
-	"ariga.io/atlas-go-sdk/atlasexec"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 type app struct {
-	env string
+	env              string
+	ctx              context.Context
+	cancel           context.CancelFunc
+	configuringTasks sync.WaitGroup
 }
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
 	env := strings.TrimSpace(os.Getenv("ENVIRONMENT"))
 
 	app := &app{
-		env: env,
+		env:    env,
+		ctx:    ctx,
+		cancel: cancel,
 	}
 
 	app.configuringLog()
@@ -31,25 +36,17 @@ func main() {
 
 	provider := provider.NewProvider(env)
 
-	client, err := atlas.NewAtlasClient()
+	client, err := provider.ProvideAtlasCLient()
 	if err != nil {
-		log.Fatal().Stack().Err(err).Msgf("Failed to create Atlas client")
+		os.Exit(1)
 	}
-
-	// Run `atlas migrate apply` on a SQLite database under /tmp.
-	res, err := client.MigrateApply(context.Background(), &atlasexec.MigrateApplyParams{
-		URL: "postgres://postgres:artis@localhost:5432/artis?search_path=public&sslmode=disable",
-	})
-	if err != nil {
-		log.Fatal().Msgf("failed to apply migrations: %v", err)
-	}
-	fmt.Printf("Applied %d migrations\n", len(res.Applied))
-
 	eventBus := provider.ProvideEventBus()
 	_, err = provider.ProvideKafkaConsumer(eventBus)
 	if err != nil {
 		os.Exit(1)
 	}
+
+	app.runConfigurationTasks(client)
 }
 
 func (app *app) configuringLog() {
@@ -62,4 +59,19 @@ func (app *app) configuringLog() {
 	}
 
 	log.Logger = log.With().Caller().Logger()
+}
+
+func (app *app) runConfigurationTasks(atlasCLient *atlas.AtlasClient) {
+	app.configuringTasks.Add(1)
+	go app.applyMigrations(atlasCLient)
+	app.configuringTasks.Wait()
+}
+
+func (app *app) applyMigrations(atlasCLient *atlas.AtlasClient) {
+	defer app.configuringTasks.Done()
+
+	err := atlasCLient.ApplyMigrations(app.ctx)
+	if err != nil {
+		log.Fatal().Stack().Err(err).Msgf("Failed to apply migrations")
+	}
 }

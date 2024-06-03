@@ -1,1 +1,1 @@
-CREATE SCHEMA userService;
+CREATE SCHEMA userservice;

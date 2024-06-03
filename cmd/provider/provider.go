@@ -1,6 +1,9 @@
 package provider
 
 import (
+	"os"
+	"strings"
+	"userservice/infrastructure/atlas"
 	"userservice/infrastructure/kafka"
 	"userservice/internal/bus"
 )
@@ -13,6 +16,11 @@ func NewProvider(env string) *Provider {
 	return &Provider{
 		env: env,
 	}
+}
+
+func (p *Provider) ProvideAtlasCLient() (*atlas.AtlasClient, error) {
+	connStr := strings.TrimSpace(os.Getenv("CONN_STR"))
+	return atlas.NewAtlasClient(connStr)
 }
 
 func (p *Provider) ProvideEventBus() *bus.EventBus {
