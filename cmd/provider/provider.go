@@ -3,9 +3,10 @@ package provider
 import (
 	"userservice/infrastructure/atlas"
 	"userservice/infrastructure/kafka"
+	"userservice/internal/api"
 	"userservice/internal/bus"
 	database "userservice/internal/db"
-	newuser "userservice/internal/new_user"
+	newuser "userservice/internal/features/new_user"
 )
 
 type Provider struct {
@@ -32,6 +33,14 @@ func (p *Provider) ProvideEventBus() *bus.EventBus {
 	eventBus := bus.NewEventBus()
 
 	return eventBus
+}
+
+func (p *Provider) ProvideApiEndpoint(database *database.Database) *api.Api {
+	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database))
+}
+
+func (p *Provider) ProvideApiControllers(database *database.Database) []api.Controller {
+	return []api.Controller{}
 }
 
 func (p *Provider) ProvideSubscriptions(database *database.Database) *[]bus.EventSubscription {

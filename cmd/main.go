@@ -11,6 +11,7 @@ import (
 	"userservice/cmd/provider"
 	"userservice/infrastructure/atlas"
 	"userservice/infrastructure/kafka"
+	"userservice/internal/api"
 	"userservice/internal/bus"
 
 	"github.com/rs/zerolog"
@@ -53,13 +54,14 @@ func main() {
 	defer database.Client.Close()
 	eventBus := provider.ProvideEventBus()
 	subscriptions := provider.ProvideSubscriptions(database)
+	apiEnpoint := provider.ProvideApiEndpoint(database)
 	kafkaConsumer, err := provider.ProvideKafkaConsumer(eventBus)
 	if err != nil {
 		os.Exit(1)
 	}
 
 	app.runConfigurationTasks(migrator, subscriptions, eventBus)
-	app.runServerTasks(kafkaConsumer)
+	app.runServerTasks(kafkaConsumer, apiEnpoint)
 }
 
 func (app *app) configuringLog() {
@@ -81,9 +83,10 @@ func (app *app) runConfigurationTasks(atlasCLient *atlas.AtlasClient, subscripti
 	app.configuringTasks.Wait()
 }
 
-func (app *app) runServerTasks(kafkaConsumer *kafka.KafkaConsumer) {
+func (app *app) runServerTasks(kafkaConsumer *kafka.KafkaConsumer, apiEnpoint *api.Api) {
 	app.runningTasks.Add(1)
 	go app.initKafkaConsumption(kafkaConsumer)
+	go app.runApiEndpoint(apiEnpoint)
 
 	blockForever()
 
@@ -122,6 +125,16 @@ func (app *app) initKafkaConsumption(kafkaConsumer *kafka.KafkaConsumer) {
 	log.Info().Msg("Kafka Consumer Group stopped")
 }
 
+func (app *app) runApiEndpoint(apiEnpoint *api.Api) {
+	defer app.runningTasks.Done()
+
+	err := apiEnpoint.Run(app.ctx)
+	if err != nil {
+		log.Panic().Err(err).Msg("Closing UserService Api failed")
+	}
+	log.Info().Msg("UserService Api stopped")
+}
+
 func blockForever() {
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
@@ -130,7 +143,7 @@ func blockForever() {
 
 func (app *app) shutdown() {
 	app.cancel()
-	log.Info().Msg("Shutting down Readmodels Service...")
+	log.Info().Msg("Shutting down UserService...")
 	app.runningTasks.Wait()
-	log.Info().Msg("Readmodels Service stopped")
+	log.Info().Msg("UserService stopped")
 }
