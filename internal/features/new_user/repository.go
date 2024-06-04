@@ -6,9 +6,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type UserProfileRepository database.Database
+type NewUserRepository database.Database
 
-func (r UserProfileRepository) AddNewUser(data *User) error {
+func (r NewUserRepository) AddNewUser(data *User) error {
 	tx, err := r.Client.Begin()
 	if err != nil {
 		return err

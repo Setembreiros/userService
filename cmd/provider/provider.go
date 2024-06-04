@@ -7,6 +7,7 @@ import (
 	"userservice/internal/bus"
 	database "userservice/internal/db"
 	newuser "userservice/internal/features/new_user"
+	update_userprofile "userservice/internal/features/update_useprofile"
 )
 
 type Provider struct {
@@ -40,14 +41,16 @@ func (p *Provider) ProvideApiEndpoint(database *database.Database) *api.Api {
 }
 
 func (p *Provider) ProvideApiControllers(database *database.Database) []api.Controller {
-	return []api.Controller{}
+	return []api.Controller{
+		update_userprofile.NewPutUserProfileController(update_userprofile.UpdateUserProfileRepository(*database)),
+	}
 }
 
 func (p *Provider) ProvideSubscriptions(database *database.Database) *[]bus.EventSubscription {
 	return &[]bus.EventSubscription{
 		{
 			EventType: "UserWasRegisteredEvent",
-			Handler:   newuser.NewUserWasRegisteredEventHandler(newuser.UserProfileRepository(*database)),
+			Handler:   newuser.NewUserWasRegisteredEventHandler(newuser.NewUserRepository(*database)),
 		},
 	}
 }

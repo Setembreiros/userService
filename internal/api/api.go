@@ -18,7 +18,7 @@ type Api struct {
 
 func NewApiEndpoint(env string, controllers []Controller) *Api {
 	return &Api{
-		port:        5555,
+		port:        4444,
 		env:         env,
 		controllers: controllers,
 	}
