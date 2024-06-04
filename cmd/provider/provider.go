@@ -1,32 +1,46 @@
 package provider
 
 import (
-	"os"
-	"strings"
 	"userservice/infrastructure/atlas"
 	"userservice/infrastructure/kafka"
 	"userservice/internal/bus"
+	database "userservice/internal/db"
+	newuser "userservice/internal/new_user"
 )
 
 type Provider struct {
-	env string
+	env     string
+	connStr string
 }
 
-func NewProvider(env string) *Provider {
+func NewProvider(env, connStr string) *Provider {
 	return &Provider{
-		env: env,
+		env:     env,
+		connStr: connStr,
 	}
 }
 
 func (p *Provider) ProvideAtlasCLient() (*atlas.AtlasClient, error) {
-	connStr := strings.TrimSpace(os.Getenv("CONN_STR"))
-	return atlas.NewAtlasClient(connStr)
+	return atlas.NewAtlasClient(p.connStr)
+}
+
+func (p *Provider) ProvideDb() (*database.Database, error) {
+	return database.NewDatabase(p.connStr)
 }
 
 func (p *Provider) ProvideEventBus() *bus.EventBus {
 	eventBus := bus.NewEventBus()
 
 	return eventBus
+}
+
+func (p *Provider) ProvideSubscriptions(database *database.Database) *[]bus.EventSubscription {
+	return &[]bus.EventSubscription{
+		{
+			EventType: "UserWasRegisteredEvent",
+			Handler:   newuser.NewUserWasRegisteredEventHandler(newuser.UserProfileRepository(*database)),
+		},
+	}
 }
 
 func (p *Provider) ProvideKafkaConsumer(eventBus *bus.EventBus) (*kafka.KafkaConsumer, error) {

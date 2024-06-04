@@ -1,15 +1,15 @@
 package kafka
 
 import (
-	"log"
+	"errors"
+
 	"userservice/internal/bus"
 
 	"github.com/IBM/sarama"
+	"github.com/rs/zerolog/log"
 )
 
 type Consumer struct {
-	infoLog  *log.Logger
-	errorLog *log.Logger
 	ready    chan bool
 	eventBus *bus.EventBus
 }
@@ -33,10 +33,11 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		select {
 		case message, ok := <-claim.Messages():
 			if !ok {
-				consumer.errorLog.Printf("message channel was closed")
+				err := errors.New("message channel was closed")
+				log.Error().Err(err)
 				return nil
 			}
-			consumer.infoLog.Printf("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
+			log.Info().Msgf("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
 			session.MarkMessage(message, "")
 
 			event := bus.Event{

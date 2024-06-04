@@ -1,5 +1,7 @@
 package kafka
 
 func getTopics() []string {
-	return []string{}
+	return []string{
+		"UserWasRegisteredEvent",
+	}
 }
