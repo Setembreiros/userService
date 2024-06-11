@@ -6,6 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+//go:generate mockgen -source=service.go -destination=mock/service.go
+
 type Repository interface {
 	UpdateUserProfile(data *UserProfile, bus *bus.EventBus) error
 }
@@ -36,5 +38,6 @@ func (s *UpdateUserProfileService) UpdateUserProfile(userPorfile *UserProfile) e
 		return err
 	}
 
+	log.Info().Msgf("User %s was updated", userPorfile.Username)
 	return nil
 }

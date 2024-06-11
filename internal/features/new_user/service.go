@@ -2,6 +2,8 @@ package newuser
 
 import "github.com/rs/zerolog/log"
 
+//go:generate mockgen -source=service.go -destination=mock/service.go
+
 type NewUserRegisteredService struct {
 	repository Repository
 }
