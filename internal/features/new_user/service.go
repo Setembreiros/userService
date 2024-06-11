@@ -11,7 +11,6 @@ type Repository interface {
 }
 
 type User struct {
-	ExternalId  string       `json:"external_id"`
 	Username    string       `json:"username"`
 	Email       string       `json:"email"`
 	UserType    string       `json:"user_type"`

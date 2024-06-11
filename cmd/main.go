@@ -112,7 +112,7 @@ func (app *app) subcribeEvents(subscriptions *[]bus.EventSubscription, eventBus 
 
 	for _, subscription := range *subscriptions {
 		eventBus.Subscribe(&subscription, app.ctx)
-		log.Info().Msgf("%s subscribed\n", subscription.EventType)
+		log.Info().Msgf("%s subscribed", subscription.EventType)
 	}
 
 	log.Info().Msg("All events subscribed")

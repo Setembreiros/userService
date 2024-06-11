@@ -7,7 +7,6 @@ import (
 )
 
 type UserWasRegisteredEvent struct {
-	UserId   string `json:"user_id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	UserType string `json:"user_type"`
@@ -45,11 +44,10 @@ func (handler *UserWasRegisteredEventHandler) Handle(event []byte) {
 
 func mapData(event UserWasRegisteredEvent) *User {
 	return &User{
-		ExternalId: event.UserId,
-		Username:   event.Username,
-		Email:      event.Email,
-		UserType:   event.UserType,
-		Region:     event.Region,
+		Username: event.Username,
+		Email:    event.Email,
+		UserType: event.UserType,
+		Region:   event.Region,
 		UserProfile: &UserProfile{
 			FullName: event.FullName,
 			Bio:      "",

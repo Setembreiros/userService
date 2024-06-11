@@ -24,8 +24,8 @@ func (r NewUserRepository) AddNewUser(data *User) error {
 
 	var userID int
 
-	err = tx.QueryRow("INSERT INTO userservice.users (username, email, region, user_type, external_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-		data.Username, data.Email, data.Region, data.UserType, data.ExternalId).Scan(&userID)
+	err = tx.QueryRow("INSERT INTO userservice.users (username, email, region, user_type) VALUES ($1, $2, $3, $4) RETURNING id",
+		data.Username, data.Email, data.Region, data.UserType).Scan(&userID)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Insert user failed")
 		return err
