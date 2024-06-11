@@ -44,7 +44,7 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				Type: message.Topic,
 				Data: message.Value,
 			}
-			consumer.eventBus.Publish(event)
+			consumer.eventBus.PublishLocal(event)
 		case <-session.Context().Done():
 			return nil
 		}

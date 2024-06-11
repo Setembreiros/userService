@@ -3,6 +3,7 @@ package update_userprofile
 import (
 	"errors"
 	"userservice/internal/api"
+	"userservice/internal/bus"
 	database "userservice/internal/db"
 
 	"github.com/gin-gonic/gin"
@@ -13,9 +14,9 @@ type PutUserProfileController struct {
 	service *UpdateUserProfileService
 }
 
-func NewPutUserProfileController(repository Repository) *PutUserProfileController {
+func NewPutUserProfileController(repository Repository, bus *bus.EventBus) *PutUserProfileController {
 	return &PutUserProfileController{
-		service: NewUpdateUserProfileService(repository),
+		service: NewUpdateUserProfileService(repository, bus),
 	}
 }
 

@@ -24,7 +24,6 @@ type UserWasRegisteredEventHandler struct {
 }
 
 func NewUserWasRegisteredEventHandler(repository Repository) *UserWasRegisteredEventHandler {
-
 	return &UserWasRegisteredEventHandler{
 		service: NewService(repository),
 	}

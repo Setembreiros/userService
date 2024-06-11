@@ -30,19 +30,22 @@ func (p *Provider) ProvideDb() (*database.Database, error) {
 	return database.NewDatabase(p.connStr)
 }
 
-func (p *Provider) ProvideEventBus() *bus.EventBus {
-	eventBus := bus.NewEventBus()
+func (p *Provider) ProvideEventBus() (*bus.EventBus, error) {
+	kafkaProducer, err := kafka.NewKafkaProducer(p.kafkaBrokers())
+	if err != nil {
+		return nil, err
+	}
 
-	return eventBus
+	return bus.NewEventBus(kafkaProducer), nil
 }
 
-func (p *Provider) ProvideApiEndpoint(database *database.Database) *api.Api {
-	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database))
+func (p *Provider) ProvideApiEndpoint(database *database.Database, bus *bus.EventBus) *api.Api {
+	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database, bus))
 }
 
-func (p *Provider) ProvideApiControllers(database *database.Database) []api.Controller {
+func (p *Provider) ProvideApiControllers(database *database.Database, bus *bus.EventBus) []api.Controller {
 	return []api.Controller{
-		update_userprofile.NewPutUserProfileController(update_userprofile.UpdateUserProfileRepository(*database)),
+		update_userprofile.NewPutUserProfileController(update_userprofile.UpdateUserProfileRepository(*database), bus),
 	}
 }
 
@@ -56,18 +59,20 @@ func (p *Provider) ProvideSubscriptions(database *database.Database) *[]bus.Even
 }
 
 func (p *Provider) ProvideKafkaConsumer(eventBus *bus.EventBus) (*kafka.KafkaConsumer, error) {
-	var brokers []string
+	brokers := p.kafkaBrokers()
 
+	return kafka.NewKafkaConsumer(brokers, eventBus)
+}
+
+func (p *Provider) kafkaBrokers() []string {
 	if p.env == "development" {
-		brokers = []string{
+		return []string{
 			"localhost:9093",
 		}
 	} else {
-		brokers = []string{
+		return []string{
 			"172.31.36.175:9092",
 			"172.31.45.255:9092",
 		}
 	}
-
-	return kafka.NewKafkaConsumer(brokers, eventBus)
 }

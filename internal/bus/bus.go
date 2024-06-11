@@ -2,6 +2,7 @@ package bus
 
 import (
 	"context"
+	"encoding/json"
 )
 
 type Event struct {
@@ -11,6 +12,7 @@ type Event struct {
 
 type EventBus struct {
 	subscribers map[string][]chan<- Event
+	externalBus ExternalBus
 }
 
 type EventSubscription struct {
@@ -18,17 +20,22 @@ type EventSubscription struct {
 	Handler   EventHandler
 }
 
+type ExternalBus interface {
+	Publish(event *Event) error
+}
+
 type EventHandler interface {
 	Handle(event []byte)
 }
 
-func NewEventBus() *EventBus {
+func NewEventBus(externalBus ExternalBus) *EventBus {
 	return &EventBus{
 		subscribers: make(map[string][]chan<- Event),
+		externalBus: externalBus,
 	}
 }
 
-func (eb *EventBus) Publish(event Event) {
+func (eb *EventBus) PublishLocal(event Event) {
 	subscriberChannels := eb.subscribers[event.Type]
 
 	for _, subscriberChannel := range subscriberChannels {
@@ -42,6 +49,14 @@ func (eb *EventBus) Subscribe(subscription *EventSubscription, ctx context.Conte
 	go subscription.handle(subscriptionChan, ctx)
 }
 
+func (eb *EventBus) Publish(eventName string, eventData any) error {
+	event, err := createEvent(eventName, eventData)
+	if err != nil {
+		return err
+	}
+	return eb.externalBus.Publish(event)
+}
+
 func (es EventSubscription) handle(busChannel <-chan Event, ctx context.Context) {
 	for {
 		select {
@@ -51,4 +66,20 @@ func (es EventSubscription) handle(busChannel <-chan Event, ctx context.Context)
 			return
 		}
 	}
+}
+
+func createEvent(eventName string, eventData any) (*Event, error) {
+	dataEvent, err := serialize(eventData)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Event{
+		Type: eventName,
+		Data: dataEvent,
+	}, nil
+}
+
+func serialize(data any) ([]byte, error) {
+	return json.Marshal(data)
 }

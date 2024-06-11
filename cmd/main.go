@@ -52,9 +52,12 @@ func main() {
 		os.Exit(1)
 	}
 	defer database.Client.Close()
-	eventBus := provider.ProvideEventBus()
+	eventBus, err := provider.ProvideEventBus()
+	if err != nil {
+		os.Exit(1)
+	}
 	subscriptions := provider.ProvideSubscriptions(database)
-	apiEnpoint := provider.ProvideApiEndpoint(database)
+	apiEnpoint := provider.ProvideApiEndpoint(database, eventBus)
 	kafkaConsumer, err := provider.ProvideKafkaConsumer(eventBus)
 	if err != nil {
 		os.Exit(1)
