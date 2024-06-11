@@ -87,7 +87,7 @@ func (app *app) runConfigurationTasks(atlasCLient *atlas.AtlasClient, subscripti
 }
 
 func (app *app) runServerTasks(kafkaConsumer *kafka.KafkaConsumer, apiEnpoint *api.Api) {
-	app.runningTasks.Add(1)
+	app.runningTasks.Add(2)
 	go app.initKafkaConsumption(kafkaConsumer)
 	go app.runApiEndpoint(apiEnpoint)
 
