@@ -22,7 +22,7 @@ func NewAtlasClient(connStr string) (*AtlasClient, error) {
 		return nil, errors.New("no connection string provided")
 	}
 
-	workdirPath, _ := filepath.Abs("/infrastructure/atlas/migrations")
+	workdirPath, _ := filepath.Abs("infrastructure/atlas/migrations/")
 	workdir, err := atlasexec.NewWorkingDir(
 		atlasexec.WithMigrations(
 			os.DirFS(workdirPath),
