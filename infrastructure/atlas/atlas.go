@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 
 	"ariga.io/atlas-go-sdk/atlasexec"
 	"github.com/rs/zerolog/log"
@@ -20,9 +21,11 @@ func NewAtlasClient(connStr string) (*AtlasClient, error) {
 		log.Error().Stack().Msgf("No connection string provided")
 		return nil, errors.New("no connection string provided")
 	}
+
+	workdirPath, _ := filepath.Abs("/infrastructure/atlas/migrations")
 	workdir, err := atlasexec.NewWorkingDir(
 		atlasexec.WithMigrations(
-			os.DirFS("./infrastructure/atlas/migrations"),
+			os.DirFS(workdirPath),
 		),
 	)
 	if err != nil {
