@@ -30,6 +30,7 @@ func (controller *PutUserProfileController) PutUserProfile(c *gin.Context) {
 
 	if err := c.BindJSON(&userProfile); err != nil {
 		log.Error().Stack().Err(err).Msg("Invalid Data")
+		api.SendBadRequest(c, "Invalid Json Request")
 		return
 	}
 
