@@ -17,6 +17,15 @@ require (
 	ariga.io/atlas v0.20.1-0.20240321075817-75fd3b1accbf // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.6 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.19 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.19 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.0 // indirect
+	github.com/aws/smithy-go v1.22.0 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
@@ -68,6 +77,8 @@ require (
 
 require (
 	github.com/IBM/sarama v1.43.2
+	github.com/aws/aws-sdk-go-v2 v1.32.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.65.0
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/lib/pq v1.10.9

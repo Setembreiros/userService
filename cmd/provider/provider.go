@@ -8,6 +8,7 @@ import (
 	database "userservice/internal/db"
 	newuser "userservice/internal/features/new_user"
 	update_userprofile "userservice/internal/features/update_useprofile"
+	objectstorage "userservice/internal/objectStorage"
 )
 
 type Provider struct {
@@ -39,13 +40,13 @@ func (p *Provider) ProvideEventBus() (*bus.EventBus, error) {
 	return bus.NewEventBus(kafkaProducer), nil
 }
 
-func (p *Provider) ProvideApiEndpoint(database *database.Database, bus *bus.EventBus) *api.Api {
-	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database, bus))
+func (p *Provider) ProvideApiEndpoint(database *database.Database, objectRepository *objectstorage.ObjectStorage, bus *bus.EventBus) *api.Api {
+	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(database, objectRepository, bus))
 }
 
-func (p *Provider) ProvideApiControllers(database *database.Database, bus *bus.EventBus) []api.Controller {
+func (p *Provider) ProvideApiControllers(database *database.Database, objectRepository *objectstorage.ObjectStorage, bus *bus.EventBus) []api.Controller {
 	return []api.Controller{
-		update_userprofile.NewPutUserProfileController(update_userprofile.UpdateUserProfileRepository(*database), bus),
+		update_userprofile.NewPutUserProfileController(update_userprofile.NewUpdateUserProfileRepository(database, objectRepository), bus),
 	}
 }
 

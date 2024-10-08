@@ -14,6 +14,11 @@ type PutUserProfileController struct {
 	service *UpdateUserProfileService
 }
 
+type UpdateUserProfileImageResponse struct {
+	UserProfileImageId string `json:"user_profile_image_id"`
+	PresignedUrl       string `json:"presigned_url"`
+}
+
 func NewPutUserProfileController(repository Repository, bus *bus.EventBus) *PutUserProfileController {
 	return &PutUserProfileController{
 		service: NewUpdateUserProfileService(repository, bus),
@@ -22,6 +27,8 @@ func NewPutUserProfileController(repository Repository, bus *bus.EventBus) *PutU
 
 func (controller *PutUserProfileController) Routes(routerGroup *gin.RouterGroup) {
 	routerGroup.PUT("/userprofile", controller.PutUserProfile)
+	routerGroup.PUT("/userprofile/image", controller.PutUserProfileImage)
+	// routerGroup.PUT("/userprofile/confirm-updated-image", controller.ConfirmUserProfileUpdatedImage)
 }
 
 func (controller *PutUserProfileController) PutUserProfile(c *gin.Context) {
@@ -47,4 +54,26 @@ func (controller *PutUserProfileController) PutUserProfile(c *gin.Context) {
 	}
 
 	api.SendOKWithResult(c, &userProfile)
+}
+
+func (controller *PutUserProfileController) PutUserProfileImage(c *gin.Context) {
+	log.Info().Msg("Handling Request PUT UserProfileImage")
+	var userProfileImage UserProfileImage
+
+	if err := c.BindJSON(&userProfileImage); err != nil {
+		log.Error().Stack().Err(err).Msg("Invalid Data")
+		api.SendBadRequest(c, "Invalid Json Request")
+		return
+	}
+
+	userProfileImageId, presignedUrl, err := controller.service.UpdateUserProfileImage(&userProfileImage)
+	if err != nil {
+		api.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	api.SendOKWithResult(c, &UpdateUserProfileImageResponse{
+		UserProfileImageId: userProfileImageId,
+		PresignedUrl:       presignedUrl,
+	})
 }
