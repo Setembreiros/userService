@@ -15,8 +15,7 @@ type PutUserProfileController struct {
 }
 
 type UpdateUserProfileImageResponse struct {
-	UserProfileImageId string `json:"user_profile_image_id"`
-	PresignedUrl       string `json:"presigned_url"`
+	PresignedUrl string `json:"presigned_url"`
 }
 
 func NewPutUserProfileController(repository Repository, bus *bus.EventBus) *PutUserProfileController {
@@ -66,14 +65,13 @@ func (controller *PutUserProfileController) PutUserProfileImage(c *gin.Context) 
 		return
 	}
 
-	userProfileImageId, presignedUrl, err := controller.service.UpdateUserProfileImage(&userProfileImage)
+	presignedUrl, err := controller.service.UpdateUserProfileImage(&userProfileImage)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return
 	}
 
 	api.SendOKWithResult(c, &UpdateUserProfileImageResponse{
-		UserProfileImageId: userProfileImageId,
-		PresignedUrl:       presignedUrl,
+		PresignedUrl: presignedUrl,
 	})
 }

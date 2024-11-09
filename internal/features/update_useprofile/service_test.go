@@ -8,9 +8,9 @@ import (
 	update_userprofile "userservice/internal/features/update_useprofile"
 	mock_update_userprofile "userservice/internal/features/update_useprofile/mock"
 
-	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 var serviceLoggerOutput bytes.Buffer
@@ -54,4 +54,33 @@ func TestErrorOnCreateNewUserProfileWithService(t *testing.T) {
 	updateUserProfileService.UpdateUserProfile(data)
 
 	assert.Contains(t, serviceLoggerOutput.String(), "Error updating userprofile for username username1")
+}
+
+func TestUpdateUserProfileImageWithService(t *testing.T) {
+	setUpService(t)
+	data := &update_userprofile.UserProfileImage{
+		Username: "username1",
+	}
+	serviceRepository.EXPECT().GetPresignedUrlForUploading(data).Return("asdasd", nil)
+
+	result, err := updateUserProfileService.UpdateUserProfileImage(data)
+
+	assert.Contains(t, serviceLoggerOutput.String(), "PresignedUrl for the UserProfileImage of username1 was created")
+	assert.NotEmpty(t, result)
+	assert.Nil(t, err)
+}
+
+func TestErrorOnUpdateUserProfileImageWithService(t *testing.T) {
+	setUpService(t)
+	data := &update_userprofile.UserProfileImage{
+		Username: "username1",
+	}
+
+	serviceRepository.EXPECT().GetPresignedUrlForUploading(data).Return("", errors.New("some error"))
+
+	result, err := updateUserProfileService.UpdateUserProfileImage(data)
+
+	assert.Contains(t, serviceLoggerOutput.String(), "Error generating Pre-Signed URL")
+	assert.Empty(t, result)
+	assert.NotNil(t, err)
 }

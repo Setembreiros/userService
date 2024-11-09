@@ -56,8 +56,12 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
+	objectStorage, err := provider.ProvideObjectStorage(ctx)
+	if err != nil {
+		os.Exit(1)
+	}
 	subscriptions := provider.ProvideSubscriptions(database)
-	apiEnpoint := provider.ProvideApiEndpoint(database, eventBus)
+	apiEnpoint := provider.ProvideApiEndpoint(database, objectStorage, eventBus)
 	kafkaConsumer, err := provider.ProvideKafkaConsumer(eventBus)
 	if err != nil {
 		os.Exit(1)

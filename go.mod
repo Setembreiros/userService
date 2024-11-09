@@ -7,10 +7,12 @@ toolchain go1.22.3
 require (
 	ariga.io/atlas-go-sdk v0.5.3
 	github.com/DATA-DOG/go-sqlmock v1.5.2
+	github.com/aws/aws-sdk-go-v2/config v1.27.42
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.40
 	github.com/go-playground/assert/v2 v2.2.0
-	github.com/golang/mock v1.6.0
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.4.0
 )
 
 require (
@@ -18,13 +20,18 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.6 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.19 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.19 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.16 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.20 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.20 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.24.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.32.1 // indirect
 	github.com/aws/smithy-go v1.22.0 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
@@ -77,7 +84,7 @@ require (
 
 require (
 	github.com/IBM/sarama v1.43.2
-	github.com/aws/aws-sdk-go-v2 v1.32.0
+	github.com/aws/aws-sdk-go-v2 v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.65.0
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0

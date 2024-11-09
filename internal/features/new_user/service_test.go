@@ -8,9 +8,9 @@ import (
 	newuser "userservice/internal/features/new_user"
 	mock_newuser "userservice/internal/features/new_user/mock"
 
-	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 var serviceLoggerOutput bytes.Buffer

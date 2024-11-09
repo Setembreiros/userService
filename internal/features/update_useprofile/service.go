@@ -10,7 +10,6 @@ import (
 
 type Repository interface {
 	UpdateUserProfile(data *UserProfile, bus *bus.EventBus) error
-	SaveUserProfileImageMetaData(userProfileImage *UserProfileImage) error
 	GetPresignedUrlForUploading(userProfileImage *UserProfileImage) (string, error)
 }
 
@@ -28,17 +27,6 @@ type UserProfile struct {
 
 type UserProfileImage struct {
 	Username string `json:"username"`
-	FileType string `json:"file_type"`
-}
-
-type ConfirmedUpdatedUserProfileImage struct {
-	IsConfirmed        bool   `json:"is_confirmed"`
-	UserProfileImageId string `json:"user_profile_image_id"`
-}
-
-type UserProfileImageWasUpdatedEvent struct {
-	UserProfileImageId string            `json:"user_profile_image_id"`
-	Metadata           *UserProfileImage `json:"metadata"`
 }
 
 func NewUpdateUserProfileService(repository Repository, bus *bus.EventBus) *UpdateUserProfileService {
@@ -59,34 +47,23 @@ func (s *UpdateUserProfileService) UpdateUserProfile(userPorfile *UserProfile) e
 	return nil
 }
 
-func (s *UpdateUserProfileService) UpdateUserProfileImage(userProfileImage *UserProfileImage) (string, string, error) {
+func (s *UpdateUserProfileService) UpdateUserProfileImage(userProfileImage *UserProfileImage) (string, error) {
 	chError := make(chan error, 2)
 	chResult := make(chan string, 1)
 
-	go s.SaveUserProfileImageMetaData(userProfileImage, chError)
 	go s.GeneratePreSignedUrl(userProfileImage, chResult, chError)
 
-	numberOfTasks := 2
+	numberOfTasks := 1
 	for i := 0; i < numberOfTasks; i++ {
 		err := <-chError
 		if err != nil {
-			return "", "", err
+			return "", err
 		}
 	}
 
 	result := <-chResult
-	log.Info().Msgf("UserProfileImage for %s was created", userProfileImage.Username)
-	return generateUserProfileImageId(userProfileImage), result, nil
-}
-
-func (s *UpdateUserProfileService) SaveUserProfileImageMetaData(userProfileImage *UserProfileImage, chError chan<- error) {
-	err := s.repository.SaveUserProfileImageMetaData(userProfileImage)
-	if err != nil {
-		log.Error().Stack().Err(err).Msg("Error saving Post metadata")
-		chError <- err
-	}
-
-	chError <- nil
+	log.Info().Msgf("PresignedUrl for the UserProfileImage of %s was created", userProfileImage.Username)
+	return result, nil
 }
 
 func (s *UpdateUserProfileService) GeneratePreSignedUrl(userProfileImage *UserProfileImage, chResult chan<- string, chError chan<- error) {

@@ -17,8 +17,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
-	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog/log"
+	"go.uber.org/mock/gomock"
 )
 
 var controllerLoggerOutput bytes.Buffer
@@ -114,6 +114,32 @@ func TestInternalServerOnGetUserProfile(t *testing.T) {
 	controller.PutUserProfile(ginContext)
 
 	assert.Equal(t, apiResponse.Code, 500)
+	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
+}
+
+func TestPutUserProfileImage(t *testing.T) {
+	setUpHandler(t)
+	newUserProfileImage := &update_userprofile.UserProfileImage{
+		Username: "username1",
+	}
+	data, _ := serializeData(newUserProfileImage)
+	ginContext.Request = httptest.NewRequest(http.MethodPut, "/userprofile/image", bytes.NewBuffer(data))
+
+	expectedUrl := newUserProfileImage.Username + "/IMAGEPROFILE/" + newUserProfileImage.Username
+
+	controllerRepository.EXPECT().GetPresignedUrlForUploading(newUserProfileImage).Return(expectedUrl, nil)
+
+	expectedBodyResponse := `{
+	    "error": false,
+		"message": "200OK",
+		"content": {
+			"presigned_url": "` + expectedUrl + `"
+		}
+	}`
+
+	controller.PutUserProfileImage(ginContext)
+
+	assert.Equal(t, apiResponse.Code, 200)
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
 }
 

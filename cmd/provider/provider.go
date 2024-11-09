@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"context"
 	"userservice/infrastructure/atlas"
+	awsClients "userservice/infrastructure/aws"
 	"userservice/infrastructure/kafka"
 	"userservice/internal/api"
 	"userservice/internal/bus"
@@ -9,6 +11,11 @@ import (
 	newuser "userservice/internal/features/new_user"
 	update_userprofile "userservice/internal/features/update_useprofile"
 	objectstorage "userservice/internal/objectStorage"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/rs/zerolog/log"
 )
 
 type Provider struct {
@@ -65,6 +72,23 @@ func (p *Provider) ProvideKafkaConsumer(eventBus *bus.EventBus) (*kafka.KafkaCon
 	return kafka.NewKafkaConsumer(brokers, eventBus)
 }
 
+func (p *Provider) ProvideObjectStorage(ctx context.Context) (*objectstorage.ObjectStorage, error) {
+	var cfg aws.Config
+	var err error
+
+	if p.env == "development" {
+		cfg, err = provideDevEnvironmentDbConfig(ctx, "4566")
+	} else {
+		cfg, err = provideAwsConfig(ctx)
+	}
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to load aws configuration")
+		return nil, err
+	}
+
+	return objectstorage.NewObjectStorage(awsClients.NewS3Client(cfg, "artis-bucket")), nil
+}
+
 func (p *Provider) kafkaBrokers() []string {
 	if p.env == "development" {
 		return []string{
@@ -76,4 +100,24 @@ func (p *Provider) kafkaBrokers() []string {
 			"172.31.45.255:9092",
 		}
 	}
+}
+
+func provideAwsConfig(ctx context.Context) (aws.Config, error) {
+	return config.LoadDefaultConfig(ctx, config.WithRegion("eu-west-3"))
+}
+
+func provideDevEnvironmentDbConfig(ctx context.Context, port string) (aws.Config, error) {
+	return config.LoadDefaultConfig(ctx,
+		config.WithRegion("localhost"),
+		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
+			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+				return aws.Endpoint{URL: "http://localhost:" + port}, nil
+			})),
+		config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
+			Value: aws.Credentials{
+				AccessKeyID: "abcd", SecretAccessKey: "a1b2c3", SessionToken: "",
+				Source: "Mock credentials used above for local instance",
+			},
+		}),
+	)
 }

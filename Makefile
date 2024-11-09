@@ -1,6 +1,6 @@
 DEV-ENVIRONMENT=development
 PROD-ENVIRONMENT=production
-DEV-CONN_STR=postgres://postgres:artis@localhost:5432/artis?search_path=public&sslmode=disable
+DEV-CONN_STR=postgres://postgres:artis@127.0.0.1:5432/artis?search_path=public&sslmode=disable
 PROD-CONN_STR=postgres://postgres:artis12345@artis.c5i8qu2qshhb.eu-west-3.rds.amazonaws.com:5432/artis?search_path=public
 
 update:

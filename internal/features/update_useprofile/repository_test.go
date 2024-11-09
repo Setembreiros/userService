@@ -12,15 +12,18 @@ import (
 	mock_bus "userservice/internal/bus/mock"
 	database "userservice/internal/db"
 	update_userprofile "userservice/internal/features/update_useprofile"
+	objectstorage "userservice/internal/objectStorage"
+	mock_objectstorage "userservice/internal/objectStorage/mock"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/golang/mock/gomock"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 var sqlMock sqlmock.Sqlmock
-var updateUserProfileRepository update_userprofile.UpdateUserProfileRepository
+var updateUserProfileRepository *update_userprofile.UpdateUserProfileRepository
+var osClient *mock_objectstorage.MockObjectStorageClient
 var repositoryBus *bus.EventBus
 var repositoryExternalBus *mock_bus.MockExternalBus
 var repositoryLoggerOutput bytes.Buffer
@@ -32,10 +35,11 @@ func setUp(t *testing.T) {
 		Client: db,
 	}
 	ctrl := gomock.NewController(t)
+	osClient = mock_objectstorage.NewMockObjectStorageClient(ctrl)
 	repositoryExternalBus = mock_bus.NewMockExternalBus(ctrl)
 	repositoryBus = bus.NewEventBus(repositoryExternalBus)
-	log.Logger = log.Output(&serviceLoggerOutput)
-	updateUserProfileRepository = update_userprofile.UpdateUserProfileRepository(*database)
+	log.Logger = log.Output(&repositoryLoggerOutput)
+	updateUserProfileRepository = update_userprofile.NewUpdateUserProfileRepository(database, objectstorage.NewObjectStorage(osClient))
 }
 
 func TestUpdateUserProfileInRepository(t *testing.T) {
@@ -86,7 +90,7 @@ func TestErrorOnUpdateUserProfileInRepositoryWhenUpdatingUserProfilesTable(t *te
 
 	err := updateUserProfileRepository.UpdateUserProfile(data, repositoryBus)
 
-	assert.Contains(t, serviceLoggerOutput.String(), "Update user profile failed")
+	assert.Contains(t, repositoryLoggerOutput.String(), "Update user profile failed")
 	assert.NotNil(t, err)
 	if err := sqlMock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expections: %s", err)
@@ -111,7 +115,7 @@ func TestNotFoundErrorOnUpdateUserProfileInRepositoryWhenUpdatingUserProfilesTab
 
 	err := updateUserProfileRepository.UpdateUserProfile(data, repositoryBus)
 
-	assert.Contains(t, serviceLoggerOutput.String(), "Update user profile failed")
+	assert.Contains(t, repositoryLoggerOutput.String(), "Update user profile failed")
 	assert.NotNil(t, err)
 	assert.ErrorAs(t, err, &expectedNotFoundError)
 	if err := sqlMock.ExpectationsWereMet(); err != nil {
@@ -144,11 +148,22 @@ func TestErrorOnUpdateUserProfileInRepositoryWhenPublishingEvent(t *testing.T) {
 
 	err := updateUserProfileRepository.UpdateUserProfile(data, repositoryBus)
 
-	assert.Contains(t, serviceLoggerOutput.String(), "Publishing UserProfileUpdatedEvent failed")
+	assert.Contains(t, repositoryLoggerOutput.String(), "Publishing UserProfileUpdatedEvent failed")
 	assert.NotNil(t, err)
 	if err := sqlMock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expections: %s", err)
 	}
+}
+
+func TestGetPresignedUrlsForUploading(t *testing.T) {
+	setUp(t)
+	userProfileImage := &update_userprofile.UserProfileImage{
+		Username: "username1",
+	}
+
+	expectedKey := userProfileImage.Username + "/IMAGEPROFILE/" + userProfileImage.Username
+	osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey)
+	updateUserProfileRepository.GetPresignedUrlForUploading(userProfileImage)
 }
 
 func createEvent(eventName string, eventData any) (*bus.Event, error) {
