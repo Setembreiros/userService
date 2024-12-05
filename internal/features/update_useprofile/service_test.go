@@ -3,8 +3,10 @@ package update_userprofile_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"testing"
 	"userservice/internal/bus"
+	mock_bus "userservice/internal/bus/mock"
 	update_userprofile "userservice/internal/features/update_useprofile"
 	mock_update_userprofile "userservice/internal/features/update_useprofile/mock"
 
@@ -15,13 +17,15 @@ import (
 
 var serviceLoggerOutput bytes.Buffer
 var serviceRepository *mock_update_userprofile.MockRepository
+var serviceExternalBus *mock_bus.MockExternalBus
 var serviceBus *bus.EventBus
 var updateUserProfileService *update_userprofile.UpdateUserProfileService
 
 func setUpService(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	serviceRepository = mock_update_userprofile.NewMockRepository(ctrl)
-	serviceBus = &bus.EventBus{}
+	serviceExternalBus = mock_bus.NewMockExternalBus(ctrl)
+	serviceBus = bus.NewEventBus(serviceExternalBus)
 	log.Logger = log.Output(&serviceLoggerOutput)
 	updateUserProfileService = update_userprofile.NewUpdateUserProfileService(serviceRepository, serviceBus)
 }
@@ -83,4 +87,61 @@ func TestErrorOnUpdateUserProfileImageWithService(t *testing.T) {
 	assert.Contains(t, serviceLoggerOutput.String(), "Error generating Pre-Signed URL")
 	assert.Empty(t, result)
 	assert.NotNil(t, err)
+}
+
+func TestConfirmUserProfileImageUpdatedWithService(t *testing.T) {
+	setUpService(t)
+	confirmedUserProfileImageUpdate := &update_userprofile.ConfirmUserProfileImageUpdated{
+		IsConfirmed: true,
+		Username:    "username1",
+	}
+	expectedEventData := &update_userprofile.UserProfileImageUpdateEvent{
+		Username: confirmedUserProfileImageUpdate.Username,
+	}
+
+	expectedEvent, _ := createEvent("UserProfileImageWasUpdatedEvent", expectedEventData)
+	serviceExternalBus.EXPECT().Publish(expectedEvent).Return(nil)
+
+	err := updateUserProfileService.ConfirmUserProfileImageUpdated(confirmedUserProfileImageUpdate)
+
+	assert.Nil(t, err)
+
+	message := fmt.Sprintf("Update of user %s profile image was confirmed", confirmedUserProfileImageUpdate.Username)
+	assert.Contains(t, serviceLoggerOutput.String(), message)
+}
+
+func TestNotConfirmedUserProfileImageUpdatedWithService(t *testing.T) {
+	setUpService(t)
+	confirmedUserProfileImageUpdate := &update_userprofile.ConfirmUserProfileImageUpdated{
+		IsConfirmed: false,
+		Username:    "username1",
+	}
+
+	err := updateUserProfileService.ConfirmUserProfileImageUpdated(confirmedUserProfileImageUpdate)
+
+	assert.Nil(t, err)
+
+	message := fmt.Sprintf("Update of user %s profile image failed because it's not confirmed", confirmedUserProfileImageUpdate.Username)
+	assert.Contains(t, serviceLoggerOutput.String(), message)
+}
+
+func TestBusErrorOnConfirmUserProfileImageUpdatedWithService(t *testing.T) {
+	setUpService(t)
+	confirmedUserProfileImageUpdate := &update_userprofile.ConfirmUserProfileImageUpdated{
+		IsConfirmed: true,
+		Username:    "username1",
+	}
+	expectedEventData := &update_userprofile.UserProfileImageUpdateEvent{
+		Username: confirmedUserProfileImageUpdate.Username,
+	}
+
+	expectedEvent, _ := createEvent("UserProfileImageWasUpdatedEvent", expectedEventData)
+	serviceExternalBus.EXPECT().Publish(expectedEvent).Return(errors.New("some error"))
+
+	err := updateUserProfileService.ConfirmUserProfileImageUpdated(confirmedUserProfileImageUpdate)
+
+	assert.NotNil(t, err)
+
+	message := fmt.Sprintf("Publishing UserProfileImageWasUpdatedEvent for user %s failed", confirmedUserProfileImageUpdate.Username)
+	assert.Contains(t, serviceLoggerOutput.String(), message)
 }

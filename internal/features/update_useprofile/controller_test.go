@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"userservice/internal/bus"
+	mock_bus "userservice/internal/bus/mock"
 	database "userservice/internal/db"
 	update_userprofile "userservice/internal/features/update_useprofile"
 	mock_update_userprofile "userservice/internal/features/update_useprofile/mock"
@@ -23,6 +24,7 @@ import (
 
 var controllerLoggerOutput bytes.Buffer
 var controllerRepository *mock_update_userprofile.MockRepository
+var controllerExternalBus *mock_bus.MockExternalBus
 var controllerBus *bus.EventBus
 var controller *update_userprofile.PutUserProfileController
 var apiResponse *httptest.ResponseRecorder
@@ -32,7 +34,8 @@ func setUpHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	log.Logger = log.Output(&controllerLoggerOutput)
 	controllerRepository = mock_update_userprofile.NewMockRepository(ctrl)
-	controllerBus = &bus.EventBus{}
+	controllerExternalBus = mock_bus.NewMockExternalBus(ctrl)
+	controllerBus = bus.NewEventBus(controllerExternalBus)
 	controller = update_userprofile.NewPutUserProfileController(controllerRepository, controllerBus)
 	gin.SetMode(gin.TestMode)
 	apiResponse = httptest.NewRecorder()
@@ -138,6 +141,33 @@ func TestPutUserProfileImage(t *testing.T) {
 	}`
 
 	controller.PutUserProfileImage(ginContext)
+
+	assert.Equal(t, apiResponse.Code, 200)
+	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
+}
+
+func TestConfirmUserProfileImageUpdated(t *testing.T) {
+	setUpHandler(t)
+	confirmUserProfileImageUpdated := &update_userprofile.ConfirmUserProfileImageUpdated{
+		IsConfirmed: true,
+		Username:    "username1",
+	}
+	expectedEventData := &update_userprofile.UserProfileImageUpdateEvent{
+		Username: confirmUserProfileImageUpdated.Username,
+	}
+	data, _ := serializeData(confirmUserProfileImageUpdated)
+	ginContext.Request = httptest.NewRequest(http.MethodPut, "/userprofile/confirm-updated-image", bytes.NewBuffer(data))
+
+	expectedBodyResponse := `{
+	    "error": false,
+		"message": "200 OK",
+		"content": null
+	}`
+
+	expectedEvent, _ := createEvent("UserProfileImageWasUpdatedEvent", expectedEventData)
+	controllerExternalBus.EXPECT().Publish(expectedEvent).Return(nil)
+
+	controller.ConfirmUserProfileImageUpdated(ginContext)
 
 	assert.Equal(t, apiResponse.Code, 200)
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))

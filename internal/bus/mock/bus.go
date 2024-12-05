@@ -20,6 +20,7 @@ import (
 type MockExternalBus struct {
 	ctrl     *gomock.Controller
 	recorder *MockExternalBusMockRecorder
+	isgomock struct{}
 }
 
 // MockExternalBusMockRecorder is the mock recorder for MockExternalBus.
@@ -57,6 +58,7 @@ func (mr *MockExternalBusMockRecorder) Publish(event any) *gomock.Call {
 type MockEventHandler struct {
 	ctrl     *gomock.Controller
 	recorder *MockEventHandlerMockRecorder
+	isgomock struct{}
 }
 
 // MockEventHandlerMockRecorder is the mock recorder for MockEventHandler.

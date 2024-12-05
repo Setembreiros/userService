@@ -27,7 +27,7 @@ func NewPutUserProfileController(repository Repository, bus *bus.EventBus) *PutU
 func (controller *PutUserProfileController) Routes(routerGroup *gin.RouterGroup) {
 	routerGroup.PUT("/userprofile", controller.PutUserProfile)
 	routerGroup.PUT("/userprofile/image", controller.PutUserProfileImage)
-	// routerGroup.PUT("/userprofile/confirm-updated-image", controller.ConfirmUserProfileUpdatedImage)
+	routerGroup.PUT("/userprofile/confirm-updated-image", controller.ConfirmUserProfileImageUpdated)
 }
 
 func (controller *PutUserProfileController) PutUserProfile(c *gin.Context) {
@@ -74,4 +74,24 @@ func (controller *PutUserProfileController) PutUserProfileImage(c *gin.Context) 
 	api.SendOKWithResult(c, &UpdateUserProfileImageResponse{
 		PresignedUrl: presignedUrl,
 	})
+}
+
+func (controller *PutUserProfileController) ConfirmUserProfileImageUpdated(c *gin.Context) {
+	log.Info().Msg("Handling Request PUT ConfirmUserProfileImageUpdated")
+
+	var updatedImageConfirm ConfirmUserProfileImageUpdated
+
+	if err := c.BindJSON(&updatedImageConfirm); err != nil {
+		log.Error().Stack().Err(err).Msg("Invalid Data")
+		api.SendBadRequest(c, "Invalid Json Request")
+		return
+	}
+
+	err := controller.service.ConfirmUserProfileImageUpdated(&updatedImageConfirm)
+	if err != nil {
+		api.SendInternalServerError(c, err.Error())
+		return
+	}
+
+	api.SendOK(c)
 }

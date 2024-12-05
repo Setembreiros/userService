@@ -13,6 +13,11 @@ type Repository interface {
 	GetPresignedUrlForUploading(userProfileImage *UserProfileImage) (string, error)
 }
 
+type ConfirmUserProfileImageUpdated struct {
+	IsConfirmed bool   `json:"is_confirmed"`
+	Username    string `json:"username"`
+}
+
 type UpdateUserProfileService struct {
 	repository Repository
 	bus        *bus.EventBus
@@ -26,6 +31,10 @@ type UserProfile struct {
 }
 
 type UserProfileImage struct {
+	Username string `json:"username"`
+}
+
+type UserProfileImageUpdateEvent struct {
 	Username string `json:"username"`
 }
 
@@ -75,4 +84,33 @@ func (s *UpdateUserProfileService) GeneratePreSignedUrl(userProfileImage *UserPr
 
 	chError <- nil
 	chResult <- presignedUrl
+}
+
+func (s *UpdateUserProfileService) ConfirmUserProfileImageUpdated(confirmUserProfileImageData *ConfirmUserProfileImageUpdated) error {
+	if !confirmUserProfileImageData.IsConfirmed {
+		log.Info().Msgf("Update of user %s profile image failed because it's not confirmed", confirmUserProfileImageData.Username)
+		return nil
+	}
+
+	err := s.publishUserProfileImageWasUpdatedEvent(confirmUserProfileImageData.Username)
+	if err != nil {
+		return err
+	}
+
+	log.Info().Msgf("Update of user %s profile image was confirmed", confirmUserProfileImageData.Username)
+
+	return nil
+}
+
+func (s *UpdateUserProfileService) publishUserProfileImageWasUpdatedEvent(username string) error {
+	event := &UserProfileImageUpdateEvent{
+		Username: username,
+	}
+	err := s.bus.Publish("UserProfileImageWasUpdatedEvent", event)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Publishing UserProfileImageWasUpdatedEvent for user %s failed", username)
+		return err
+	}
+
+	return nil
 }
