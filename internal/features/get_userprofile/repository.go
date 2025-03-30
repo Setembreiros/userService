@@ -2,17 +2,20 @@ package get_userprofile
 
 import (
 	database "userservice/internal/db"
+	objectstorage "userservice/internal/objectStorage"
 
 	"github.com/rs/zerolog/log"
 )
 
 type GetUserProfileRepository struct {
-	dataRepository *database.Database
+	dataRepository   *database.Database
+	objectRepository *objectstorage.ObjectStorage
 }
 
-func NewGetUserProfileRepository(dataRepository *database.Database) *GetUserProfileRepository {
+func NewGetUserProfileRepository(dataRepository *database.Database, objectRepository *objectstorage.ObjectStorage) *GetUserProfileRepository {
 	return &GetUserProfileRepository{
-		dataRepository: dataRepository,
+		dataRepository:   dataRepository,
+		objectRepository: objectRepository,
 	}
 }
 
@@ -30,4 +33,9 @@ func (r *GetUserProfileRepository) GetUserProfile(username string) (*UserProfile
 	}
 
 	return &userProfile, nil
+}
+
+func (r *GetUserProfileRepository) GetPresignedUrlForDownloading(username string) (string, error) {
+	key := username + "/IMAGEPROFILE/" + username
+	return r.objectRepository.Client.GetPreSignedUrlForPuttingObject(key)
 }

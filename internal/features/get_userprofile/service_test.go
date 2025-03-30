@@ -1,6 +1,7 @@
 package get_userprofile_test
 
 import (
+	"bytes"
 	"errors"
 	"testing"
 	"userservice/internal/bus"
@@ -8,6 +9,7 @@ import (
 	get_userprofile "userservice/internal/features/get_userprofile"
 	mock_get_userprofile "userservice/internal/features/get_userprofile/mock"
 
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -15,9 +17,23 @@ import (
 var serviceExternalBus *mock_bus.MockExternalBus
 var serviceBus *bus.EventBus
 
+var serviceLoggerOutput bytes.Buffer
+var mockRepository *mock_get_userprofile.MockRepository
+var service *get_userprofile.GetUserProfileService
+
+func setUpService(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	serviceLoggerOutput.Truncate(0)
+	log.Logger = log.Output(&serviceLoggerOutput)
+
+	mockRepository = mock_get_userprofile.NewMockRepository(ctrl)
+	serviceExternalBus = mock_bus.NewMockExternalBus(ctrl)
+	serviceBus = bus.NewEventBus(controllerExternalBus)
+	service = get_userprofile.NewGetUserProfileService(mockRepository, serviceBus)
+}
+
 func TestGetUserProfileService_GetUserProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	mockRepository := mock_get_userprofile.NewMockRepository(ctrl)
 	serviceExternalBus = mock_bus.NewMockExternalBus(ctrl)

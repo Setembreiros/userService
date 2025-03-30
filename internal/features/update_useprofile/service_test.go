@@ -145,3 +145,47 @@ func TestBusErrorOnConfirmUserProfileImageUpdatedWithService(t *testing.T) {
 	message := fmt.Sprintf("Publishing UserProfileImageWasUpdatedEvent for user %s failed", confirmedUserProfileImageUpdate.Username)
 	assert.Contains(t, serviceLoggerOutput.String(), message)
 }
+func TestGeneratePreSignedUrlWithService(t *testing.T) {
+	setUpService(t)
+	expectedUrl := "https://example.com/presigned-url"
+
+	data := &update_userprofile.UserProfileImage{
+		Username: "username1",
+	}
+
+	serviceRepository.EXPECT().GetPresignedUrlForUploading(data).Return(expectedUrl, nil)
+
+	chResult := make(chan string, 1)
+	chError := make(chan error, 1)
+
+	go updateUserProfileService.GeneratePreSignedUrl(data, chResult, chError)
+
+	err := <-chError
+	result := <-chResult
+
+	assert.Nil(t, err)
+	assert.Equal(t, expectedUrl, result)
+	assert.Contains(t, serviceLoggerOutput.String(), "PresignedUrl for the UserProfileImage of username1 was created")
+}
+
+func TestErrorOnGeneratePreSignedUrlWithService(t *testing.T) {
+	setUpService(t)
+	expectedError := errors.New("some error")
+	data := &update_userprofile.UserProfileImage{
+		Username: "username1",
+	}
+
+	serviceRepository.EXPECT().GetPresignedUrlForUploading(data).Return("", expectedError)
+
+	chResult := make(chan string, 1)
+	chError := make(chan error, 1)
+
+	go updateUserProfileService.GeneratePreSignedUrl(data, chResult, chError)
+
+	err := <-chError
+	result := <-chResult
+
+	assert.NotNil(t, err)
+	assert.Empty(t, result)
+	assert.Contains(t, serviceLoggerOutput.String(), "Error generating Pre-Signed URL")
+}

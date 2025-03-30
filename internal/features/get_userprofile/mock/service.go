@@ -40,6 +40,21 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// GetPresignedUrlForDownloading mocks base method.
+func (m *MockRepository) GetPresignedUrlForDownloading(username string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPresignedUrlForDownloading", username)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPresignedUrlForDownloading indicates an expected call of GetPresignedUrlForDownloading.
+func (mr *MockRepositoryMockRecorder) GetPresignedUrlForDownloading(username any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPresignedUrlForDownloading", reflect.TypeOf((*MockRepository)(nil).GetPresignedUrlForDownloading), username)
+}
+
 // GetUserProfile mocks base method.
 func (m *MockRepository) GetUserProfile(username string) (*get_userprofile.UserProfile, error) {
 	m.ctrl.T.Helper()

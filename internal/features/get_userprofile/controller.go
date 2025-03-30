@@ -22,6 +22,7 @@ func NewGetUserProfileController(repository Repository, bus *bus.EventBus) *GetU
 
 func (controller *GetUserProfileController) Routes(routerGroup *gin.RouterGroup) {
 	routerGroup.GET("/userprofile/:username", controller.GetUserProfile)
+	routerGroup.GET("/userprofile/image/:username", controller.GetUserProfileImage)
 }
 
 func (controller *GetUserProfileController) GetUserProfile(c *gin.Context) {
@@ -41,4 +42,23 @@ func (controller *GetUserProfileController) GetUserProfile(c *gin.Context) {
 	}
 
 	api.SendOKWithResult(c, userProfile)
+}
+
+func (controller *GetUserProfileController) GetUserProfileImage(c *gin.Context) {
+	log.Info().Msg("Handling Request GET UserProfile")
+	username := c.Param("username")
+
+	userProfileImage, err := controller.service.GetUserProfileImage(username)
+	if err != nil {
+		var notFoundError *database.NotFoundError
+		if errors.As(err, &notFoundError) {
+			message := "User Profile not found for username " + username
+			api.SendNotFound(c, message)
+		} else {
+			api.SendInternalServerError(c, err.Error())
+		}
+		return
+	}
+
+	api.SendOKWithResult(c, userProfileImage)
 }

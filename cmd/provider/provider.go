@@ -8,6 +8,7 @@ import (
 	"userservice/internal/api"
 	"userservice/internal/bus"
 	database "userservice/internal/db"
+	"userservice/internal/features/get_userprofile"
 	newuser "userservice/internal/features/new_user"
 	update_userprofile "userservice/internal/features/update_useprofile"
 	objectstorage "userservice/internal/objectStorage"
@@ -54,6 +55,7 @@ func (p *Provider) ProvideApiEndpoint(database *database.Database, objectReposit
 func (p *Provider) ProvideApiControllers(database *database.Database, objectRepository *objectstorage.ObjectStorage, bus *bus.EventBus) []api.Controller {
 	return []api.Controller{
 		update_userprofile.NewPutUserProfileController(update_userprofile.NewUpdateUserProfileRepository(database, objectRepository), bus),
+		get_userprofile.NewGetUserProfileController(get_userprofile.NewGetUserProfileRepository(database, objectRepository), bus),
 	}
 }
 

@@ -76,3 +76,55 @@ func TestGetUserProfileController_GetUserProfile(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 	})
 }
+func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepository := mock_get_userprofile.NewMockRepository(ctrl)
+	controllerExternalBus = mock_bus.NewMockExternalBus(ctrl)
+	controllerBus = bus.NewEventBus(controllerExternalBus)
+	controller := get_userprofile.NewGetUserProfileController(mockRepository, controllerBus)
+
+	gin.SetMode(gin.TestMode)
+
+	username := "testuser"
+	expectedUserProfileImage := "https://test.com/image.jpg"
+
+	t.Run("Success", func(t *testing.T) {
+		mockRepository.EXPECT().GetPresignedUrlForDownloading(username).Return(expectedUserProfileImage, nil)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "username", Value: username}}
+
+		controller.GetUserProfileImage(c)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		expectedError := database.NewNotFoundError("userservice.users", username)
+		mockRepository.EXPECT().GetPresignedUrlForDownloading(username).Return("", expectedError)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "username", Value: username}}
+
+		controller.GetUserProfileImage(c)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("InternalServerError", func(t *testing.T) {
+		expectedError := errors.New("repository error")
+		mockRepository.EXPECT().GetPresignedUrlForDownloading(username).Return("", expectedError)
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Params = []gin.Param{{Key: "username", Value: username}}
+
+		controller.GetUserProfileImage(c)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}

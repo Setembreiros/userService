@@ -9,7 +9,13 @@ import (
 
 	database "userservice/internal/db"
 	get_userprofile "userservice/internal/features/get_userprofile"
+	objectstorage "userservice/internal/objectStorage"
+	mock_objectstorage "userservice/internal/objectStorage/mock"
+
+	"go.uber.org/mock/gomock"
 )
+
+var osClient *mock_objectstorage.MockObjectStorageClient
 
 func TestGetUserProfileRepository_GetUserProfile(t *testing.T) {
 	db, mock, err := sqlmock.New()
@@ -18,8 +24,10 @@ func TestGetUserProfileRepository_GetUserProfile(t *testing.T) {
 	}
 	defer db.Close()
 
+	ctrl := gomock.NewController(t)
 	dataRepository := &database.Database{Client: db}
-	repository := get_userprofile.NewGetUserProfileRepository(dataRepository)
+	osClient = mock_objectstorage.NewMockObjectStorageClient(ctrl)
+	repository := get_userprofile.NewGetUserProfileRepository(dataRepository, objectstorage.NewObjectStorage(osClient))
 
 	username := "testuser"
 	expectedUserProfile := &get_userprofile.UserProfile{
@@ -49,5 +57,37 @@ func TestGetUserProfileRepository_GetUserProfile(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, userProfile)
 		assert.IsType(t, &database.NotFoundError{}, err)
+	})
+}
+
+func TestGetUserProfileRepository_GetPresignedUrlForDownloading(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	osClient = mock_objectstorage.NewMockObjectStorageClient(ctrl)
+	objectRepository := objectstorage.NewObjectStorage(osClient)
+	dataRepository := &database.Database{} // No database interaction in this test
+	repository := get_userprofile.NewGetUserProfileRepository(dataRepository, objectRepository)
+
+	username := "testuser"
+	expectedKey := username + "/IMAGEPROFILE/" + username
+	expectedUrl := "https://example.com/presigned-url"
+
+	t.Run("Success", func(t *testing.T) {
+		osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey).Return(expectedUrl, nil)
+
+		url, err := repository.GetPresignedUrlForDownloading(username)
+
+		assert.NoError(t, err)
+		assert.Equal(t, expectedUrl, url)
+	})
+
+	t.Run("Error", func(t *testing.T) {
+		osClient.EXPECT().GetPreSignedUrlForPuttingObject(expectedKey).Return("", assert.AnError)
+
+		url, err := repository.GetPresignedUrlForDownloading(username)
+
+		assert.Error(t, err)
+		assert.Empty(t, url)
 	})
 }
