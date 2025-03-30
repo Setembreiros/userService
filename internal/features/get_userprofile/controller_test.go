@@ -2,8 +2,10 @@ package get_userprofile_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"userservice/internal/bus"
 	mock_bus "userservice/internal/bus/mock"
@@ -91,6 +93,12 @@ func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
 	expectedUserProfileImage := "https://test.com/image.jpg"
 
 	t.Run("Success", func(t *testing.T) {
+		expectedBodyResponse := fmt.Sprintf(`{
+			"error": false,
+			"message": "200 OK",
+			"content": "%s"
+		}`, expectedUserProfileImage)
+
 		mockRepository.EXPECT().GetPresignedUrlForDownloading(username).Return(expectedUserProfileImage, nil)
 
 		w := httptest.NewRecorder()
@@ -100,9 +108,16 @@ func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
 		controller.GetUserProfileImage(c)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, removeSpace(w.Body.String()), removeSpace(expectedBodyResponse))
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
+		expectedBodyResponse := fmt.Sprintf(`{
+			"error": true,
+			"message": "User Profile not found for username testuser",
+			"content": null
+		}`)
+
 		expectedError := database.NewNotFoundError("userservice.users", username)
 		mockRepository.EXPECT().GetPresignedUrlForDownloading(username).Return("", expectedError)
 
@@ -113,9 +128,15 @@ func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
 		controller.GetUserProfileImage(c)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Equal(t, removeSpace(w.Body.String()), removeSpace(expectedBodyResponse))
 	})
 
 	t.Run("InternalServerError", func(t *testing.T) {
+		expectedBodyResponse := fmt.Sprintf(`{
+			"error": true,
+			"message": "repository error",
+			"content": null
+		}`)
 		expectedError := errors.New("repository error")
 		mockRepository.EXPECT().GetPresignedUrlForDownloading(username).Return("", expectedError)
 
@@ -126,5 +147,10 @@ func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
 		controller.GetUserProfileImage(c)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.Equal(t, removeSpace(w.Body.String()), removeSpace(expectedBodyResponse))
 	})
+}
+
+func removeSpace(s string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(s, " ", ""), "\t", ""), "\n", "")
 }
