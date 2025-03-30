@@ -1,6 +1,7 @@
 package get_userprofile_test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -41,6 +42,12 @@ func TestGetUserProfileController_GetUserProfile(t *testing.T) {
 	}
 
 	t.Run("Success", func(t *testing.T) {
+		serializedUserProfile, _ := serializeData(expectedUserProfile)
+		expectedBodyResponse := fmt.Sprintf(`{
+			"error": false,
+			"message": "200 OK",
+			"content": %s
+		}`, serializedUserProfile)
 		mockRepository.EXPECT().GetUserProfile(username).Return(expectedUserProfile, nil)
 
 		w := httptest.NewRecorder()
@@ -50,9 +57,15 @@ func TestGetUserProfileController_GetUserProfile(t *testing.T) {
 		controller.GetUserProfile(c)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, removeSpace(w.Body.String()), removeSpace(expectedBodyResponse))
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
+		expectedBodyResponse := fmt.Sprintf(`{
+			"error": true,
+			"message": "User Profile not found for username %s",
+			"content": null
+		}`, username)
 		expectedError := database.NewNotFoundError("userservice.users", username)
 		mockRepository.EXPECT().GetUserProfile(username).Return(nil, expectedError)
 
@@ -63,9 +76,15 @@ func TestGetUserProfileController_GetUserProfile(t *testing.T) {
 		controller.GetUserProfile(c)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Equal(t, removeSpace(w.Body.String()), removeSpace(expectedBodyResponse))
 	})
 
 	t.Run("InternalServerError", func(t *testing.T) {
+		expectedBodyResponse := fmt.Sprintf(`{
+			"error": true,
+			"message": "repository error",
+			"content": null
+		}`)
 		expectedError := errors.New("repository error")
 		mockRepository.EXPECT().GetUserProfile(username).Return(nil, expectedError)
 
@@ -76,6 +95,7 @@ func TestGetUserProfileController_GetUserProfile(t *testing.T) {
 		controller.GetUserProfile(c)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.Equal(t, removeSpace(w.Body.String()), removeSpace(expectedBodyResponse))
 	})
 }
 func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
@@ -114,9 +134,9 @@ func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
 	t.Run("NotFound", func(t *testing.T) {
 		expectedBodyResponse := fmt.Sprintf(`{
 			"error": true,
-			"message": "User Profile not found for username testuser",
+			"message": "User Profile not found for username",
 			"content": null
-		}`)
+		}`, username)
 
 		expectedError := database.NewNotFoundError("userservice.users", username)
 		mockRepository.EXPECT().GetPresignedUrlForDownloading(username).Return("", expectedError)
@@ -153,4 +173,8 @@ func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
 
 func removeSpace(s string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(s, " ", ""), "\t", ""), "\n", "")
+}
+
+func serializeData(data any) ([]byte, error) {
+	return json.Marshal(data)
 }
