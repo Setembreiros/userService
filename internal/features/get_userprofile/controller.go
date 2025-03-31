@@ -10,6 +10,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type GetUserProfileImageResponse struct {
+	PresignedUrl string `json:"presigned_url"`
+}
+
 type GetUserProfileController struct {
 	service *GetUserProfileService
 }
@@ -60,5 +64,7 @@ func (controller *GetUserProfileController) GetUserProfileImage(c *gin.Context) 
 		return
 	}
 
-	api.SendOKWithResult(c, userProfileImage)
+	api.SendOKWithResult(c, &GetUserProfileImageResponse{
+		PresignedUrl: userProfileImage,
+	})
 }

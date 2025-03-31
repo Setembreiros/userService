@@ -116,7 +116,7 @@ func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
 		expectedBodyResponse := fmt.Sprintf(`{
 			"error": false,
 			"message": "200 OK",
-			"content": "%s"
+			"content": {"presigned_url":"%s"}
 		}`, expectedUserProfileImage)
 
 		mockRepository.EXPECT().GetPresignedUrlForDownloading(username).Return(expectedUserProfileImage, nil)
@@ -134,7 +134,7 @@ func TestGetUserProfileController_GetUserProfileImage(t *testing.T) {
 	t.Run("NotFound", func(t *testing.T) {
 		expectedBodyResponse := fmt.Sprintf(`{
 			"error": true,
-			"message": "User Profile not found for username",
+			"message": "User Profile not found for username %s",
 			"content": null
 		}`, username)
 
