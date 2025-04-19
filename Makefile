@@ -1,3 +1,11 @@
+# existe un ficheiro co mesmo nome do obxectivo ou se considera que o 
+# obxectivo está actualizado ao non ter dependencias que cambiaran.
+# Neste caso dado que existe un cartafol chamado test no noso proxecto
+# o make confundiase e trataba de actualizar este ficheiro en lugares de 
+# executar o comando test. Chegaría con ".PHONY: test" neste caso
+# pero engado todos por se acaso.
+.PHONY: update build run run-dev run-dev-windows test
+
 DEV-ENVIRONMENT=development
 PROD-ENVIRONMENT=production
 DEV-CONN_STR=postgres://postgres:artis@127.0.0.1:5432/artis?search_path=public&sslmode=disable
@@ -16,7 +24,7 @@ run-dev:
 	export CONN_STR="${DEV-CONN_STR}" && export ENVIRONMENT="${DEV-ENVIRONMENT}" && go run ./cmd/main.go
 
 run-dev-windows: 
-	set CONN_STR=${DEV-CONN_STR} && set ENVIRONMENT=${DEV-ENVIRONMENT} && go run ./cmd/main.go
+	set CONN_STR="${DEV-CONN_STR}" && set ENVIRONMENT=${DEV-ENVIRONMENT} && go run ./cmd/main.go
 
 test:
 	go generate -v ./internal/... && go test ./internal/...
