@@ -9,7 +9,7 @@
 DEV-ENVIRONMENT=development
 PROD-ENVIRONMENT=production
 DEV-CONN_STR=postgres://postgres:artis@localhost:5432/artis?search_path=public&sslmode=disable
-PROD-CONN_STR=postgres://postgres:artis12345@artis.c5i8qu2qshhb.eu-west-3.rds.amazonaws.com:5432/artis?search_path=public
+PROD-CONN_STR=postgres://postgres:artis12345@artis.cb8i8sw2y7l0.eu-west-3.rds.amazonaws.com:5432/artis?search_path=public
 
 update:
 	go mod tidy
