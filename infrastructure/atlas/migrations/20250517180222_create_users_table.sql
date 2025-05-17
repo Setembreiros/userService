@@ -1,1 +1,7 @@
-infrastructure/atlas/migrations/20240603150227_create_users_table.sql infrastructure/atlas/migrations/20240603151542_create_user_profiles_table.sql infrastructure/atlas/migrations/20250517180153_create_schema.sql infrastructure/atlas/migrations/20250517180222_create_users_table.sql infrastructure/atlas/migrations/atlas.sum
+CREATE TABLE userservice.users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE,
+    email VARCHAR(255) UNIQUE,
+    user_type VARCHAR(2), 
+    region VARCHAR(255)
+);
