@@ -6,7 +6,7 @@ package mock_newuser
 
 import (
 	reflect "reflect"
-	new_user "userservice/internal/features/new_user"
+	newuser "userservice/internal/features/new_user"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -35,7 +35,7 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // AddNewUser mocks base method.
-func (m *MockRepository) AddNewUser(data *new_user.User) error {
+func (m *MockRepository) AddNewUser(data *newuser.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddNewUser", data)
 	ret0, _ := ret[0].(error)
