@@ -26,11 +26,9 @@ func TestSearchUser_WhenSuccess(t *testing.T) {
 	setUpController(t)
 	ginContext.Request, _ = http.NewRequest("GET", "/userprofile-snippets", nil)
 	expectedQuery := "bob"
-	expectedLastUsername := "bobusername0"
 	expectedLimit := 3
 	u := url.Values{}
 	u.Add("query", expectedQuery)
-	u.Add("lastUsername", expectedLastUsername)
 	u.Add("limit", strconv.Itoa(expectedLimit))
 	ginContext.Request.URL.RawQuery = u.Encode()
 	expectedUsers := []*model.UserProfileSnippet{
@@ -47,7 +45,7 @@ func TestSearchUser_WhenSuccess(t *testing.T) {
 			Name:     "aliceAndBob3",
 		},
 	}
-	controllerService.EXPECT().SearchUserProfileSnippets(expectedQuery, expectedLastUsername, expectedLimit).Return(expectedUsers, "aliceAndBobusername3", nil)
+	controllerService.EXPECT().SearchUserProfileSnippets(expectedQuery, expectedLimit).Return(expectedUsers, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
@@ -65,8 +63,7 @@ func TestSearchUser_WhenSuccess(t *testing.T) {
 					"username":  "aliceAndBobusername3",
 					"name":  "aliceAndBob3"
 			}
-			],
-			"lastUsername":"aliceAndBobusername3"
+			]
 		}
 	}`
 
@@ -80,7 +77,6 @@ func TestSearchUser_WhenSuccessWithDefaultPaginationParameters(t *testing.T) {
 	setUpController(t)
 	ginContext.Request, _ = http.NewRequest("GET", "/userprofile-snippets", nil)
 	expectedQuery := ""
-	expectedLastUsername := ""
 	expectedLimit := 5
 	expectedUsers := []*model.UserProfileSnippet{
 		{
@@ -96,7 +92,7 @@ func TestSearchUser_WhenSuccessWithDefaultPaginationParameters(t *testing.T) {
 			Name:     "aliceAndBob3",
 		},
 	}
-	controllerService.EXPECT().SearchUserProfileSnippets(expectedQuery, expectedLastUsername, expectedLimit).Return(expectedUsers, "aliceAndBobusername3", nil)
+	controllerService.EXPECT().SearchUserProfileSnippets(expectedQuery, expectedLimit).Return(expectedUsers, nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
@@ -114,8 +110,7 @@ func TestSearchUser_WhenSuccessWithDefaultPaginationParameters(t *testing.T) {
 					"username":  "aliceAndBobusername3",
 					"name":  "aliceAndBob3"
 			}
-			],
-			"lastUsername":"aliceAndBobusername3"
+			]
 		}
 	}`
 

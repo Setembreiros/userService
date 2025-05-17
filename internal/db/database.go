@@ -51,5 +51,4 @@ func (db *Database) Clean() {
 	}
 
 	log.Info().Msg("Database cleaned successfully")
-	return
 }

@@ -9,7 +9,7 @@ import (
 //go:generate mockgen -source=service.go -destination=test/mock/service.go
 
 type Repository interface {
-	SearchUserProfileSnippets(query, lastUsername string, limit int) ([]*model.UserProfileSnippet, string, error)
+	SearchUserProfileSnippets(query string, limit int) ([]*model.UserProfileSnippet, error)
 }
 
 type SearchUserService struct {
@@ -22,12 +22,12 @@ func NewSearchUserService(repository Repository) *SearchUserService {
 	}
 }
 
-func (s *SearchUserService) SearchUserProfileSnippets(query, lastUsername string, limit int) ([]*model.UserProfileSnippet, string, error) {
-	users, lastUsername, err := s.repository.SearchUserProfileSnippets(query, lastUsername, limit)
+func (s *SearchUserService) SearchUserProfileSnippets(query string, limit int) ([]*model.UserProfileSnippet, error) {
+	users, err := s.repository.SearchUserProfileSnippets(query, limit)
 	if err != nil {
-		log.Error().Stack().Err(err).Msgf("Error getting userprofile snippets for query %s with lastusername %s and limit %d", query, lastUsername, limit)
-		return users, lastUsername, err
+		log.Error().Stack().Err(err).Msgf("Error getting userprofile snippets for query %s with limit %d", query, limit)
+		return users, err
 	}
 
-	return users, lastUsername, err
+	return users, err
 }
