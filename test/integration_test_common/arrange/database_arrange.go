@@ -15,6 +15,7 @@ func CreateTestDatabase(ctx context.Context) *database.Database {
 	if err != nil {
 		panic(err)
 	}
+
 	return sqlDb
 }
 
@@ -29,6 +30,7 @@ func AddUserProfileToDatabase(t *testing.T, userPorfile *model.UserProfile) {
 
 	user := &newuser.User{
 		Username: userPorfile.Username,
+		Email:    userPorfile.Username + "@email.com",
 		UserProfile: &newuser.UserProfile{
 			FullName: userPorfile.Name,
 			Bio:      userPorfile.Bio,

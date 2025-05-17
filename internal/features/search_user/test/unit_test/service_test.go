@@ -24,7 +24,6 @@ func setUpService(t *testing.T) {
 func TestGetSearchUserProfileSnippetsWithService(t *testing.T) {
 	setUpService(t)
 	query := "bo"
-	lastUsername := "bobusername0"
 	limit := 5
 	expectedUsers := []*model.UserProfileSnippet{
 		{
@@ -40,28 +39,23 @@ func TestGetSearchUserProfileSnippetsWithService(t *testing.T) {
 			Name:     "aliceAndBob3",
 		},
 	}
-	expectedLastUsername := "aliceAndBobusername3"
-	serviceRepository.EXPECT().SearchUserProfileSnippets(query, lastUsername, limit).Return(expectedUsers, expectedLastUsername, nil)
+	serviceRepository.EXPECT().SearchUserProfileSnippets(query, limit).Return(expectedUsers, nil)
 
-	users, lastUsername, err := userProfileService.SearchUserProfileSnippets(query, lastUsername, limit)
+	users, err := userProfileService.SearchUserProfileSnippets(query, limit)
 	assert.Nil(t, err)
 	assert.ElementsMatch(t, expectedUsers, users)
-	assert.Equal(t, expectedLastUsername, lastUsername)
 }
 
 func TestErrorOnSearchUserProfileSnippetsWithService(t *testing.T) {
 	setUpService(t)
 	query := "bo"
-	lastUsername := "bobusername0"
 	limit := 5
 	expectedUsers := []*model.UserProfileSnippet{}
-	expectedLastUsername := ""
-	serviceRepository.EXPECT().SearchUserProfileSnippets(query, lastUsername, limit).Return(expectedUsers, expectedLastUsername, errors.New("some error"))
+	serviceRepository.EXPECT().SearchUserProfileSnippets(query, limit).Return(expectedUsers, errors.New("some error"))
 
-	users, lastUsername, err := userProfileService.SearchUserProfileSnippets(query, lastUsername, limit)
+	users, err := userProfileService.SearchUserProfileSnippets(query, limit)
 
-	assert.Contains(t, loggerOutput.String(), fmt.Sprintf("Error getting userprofile snippets for query %s with lastusername %s and limit %d", query, lastUsername, limit))
+	assert.Contains(t, loggerOutput.String(), fmt.Sprintf("Error getting userprofile snippets for query %s with limit %d", query, limit))
 	assert.NotNil(t, err)
 	assert.ElementsMatch(t, expectedUsers, users)
-	assert.Equal(t, expectedLastUsername, lastUsername)
 }

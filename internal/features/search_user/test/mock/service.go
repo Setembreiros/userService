@@ -35,17 +35,16 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // SearchUserProfileSnippets mocks base method.
-func (m *MockRepository) SearchUserProfileSnippets(query, lastUsername string, limit int) ([]*model.UserProfileSnippet, string, error) {
+func (m *MockRepository) SearchUserProfileSnippets(query string, limit int) ([]*model.UserProfileSnippet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SearchUserProfileSnippets", query, lastUsername, limit)
+	ret := m.ctrl.Call(m, "SearchUserProfileSnippets", query, limit)
 	ret0, _ := ret[0].([]*model.UserProfileSnippet)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // SearchUserProfileSnippets indicates an expected call of SearchUserProfileSnippets.
-func (mr *MockRepositoryMockRecorder) SearchUserProfileSnippets(query, lastUsername, limit interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) SearchUserProfileSnippets(query, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchUserProfileSnippets", reflect.TypeOf((*MockRepository)(nil).SearchUserProfileSnippets), query, lastUsername, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchUserProfileSnippets", reflect.TypeOf((*MockRepository)(nil).SearchUserProfileSnippets), query, limit)
 }

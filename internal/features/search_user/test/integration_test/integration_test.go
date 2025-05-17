@@ -24,7 +24,7 @@ var controller *search_user.SearchUserController
 var ginContext *gin.Context
 var apiResponse *httptest.ResponseRecorder
 
-func setUp(t *testing.T) {
+func setUp() {
 	apiResponse = httptest.NewRecorder()
 	ginContext, _ = gin.CreateTestContext(apiResponse)
 
@@ -39,16 +39,14 @@ func tearDown() {
 }
 
 func TestGetUserProfileSnippets_WhenDatabaseReturnsSuccess(t *testing.T) {
-	setUp(t)
+	setUp()
 	defer tearDown()
 	populateUserPorfilesDb(t)
 	query := "bo"
-	lastUsername := "bobusername1"
 	limit := 5
 	ginContext.Request, _ = http.NewRequest("GET", "/postLikes", nil)
 	u := url.Values{}
 	u.Add("query", query)
-	u.Add("lastUsername", lastUsername)
 	u.Add("limit", strconv.Itoa(limit))
 	ginContext.Request.URL.RawQuery = u.Encode()
 	expectedBodyResponse := `{
@@ -57,27 +55,26 @@ func TestGetUserProfileSnippets_WhenDatabaseReturnsSuccess(t *testing.T) {
 		"content": {
 			"users":[	
 			{
-					"username":  "usernamebob3",
-					"name":  "alice3"
-			},
-			{
 					"username":  "bobusername1",
 					"name":  "alice1"
-			},
-			{
-					"username":  "aliceAndbobusername4",
-					"name":  "aliceAndBob4"
 			},
 			{
 					"username":  "aliceusername2",
 					"name":  "bob2"
 			},
 			{
-					"username":  "aliceusername4",
-					"name":  "bo4"
+					"username":  "bobusername2",
+					"name":  "alice2"
+			},
+			{
+					"username":  "usernamebob3",
+					"name":  "alice3"
+			},
+			{
+					"username":  "aliceAndBobusername3",
+					"name":  "aliceAndBob3"
 			}
-			],
-			"lastUsername":"aliceAndBobusername4"
+			]
 		}
 	}`
 
@@ -88,11 +85,6 @@ func TestGetUserProfileSnippets_WhenDatabaseReturnsSuccess(t *testing.T) {
 
 func populateUserPorfilesDb(t *testing.T) {
 	existingUsers := []*model.UserProfile{
-		{
-			Username: "aliceusername0",
-			Name:     "alice0",
-			Bio:      "bbbbb",
-		},
 		{
 			Username: "baliceusername0",
 			Name:     "balice0",
@@ -134,12 +126,7 @@ func populateUserPorfilesDb(t *testing.T) {
 			Bio:      "aaaaa",
 		},
 		{
-			Username: "aliceusername4",
-			Name:     "bo4",
-			Bio:      "aaaaa",
-		},
-		{
-			Username: "aliceAndbobusername3",
+			Username: "aliceAndBobusername3",
 			Name:     "aliceAndBob3",
 			Bio:      "aaaaa",
 		},

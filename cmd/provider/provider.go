@@ -7,6 +7,7 @@ import (
 	"userservice/internal/bus"
 	database "userservice/internal/db"
 	newuser "userservice/internal/features/new_user"
+	"userservice/internal/features/search_user"
 	update_userprofile "userservice/internal/features/update_useprofile"
 )
 
@@ -46,6 +47,7 @@ func (p *Provider) ProvideApiEndpoint(database *database.Database, bus *bus.Even
 func (p *Provider) ProvideApiControllers(database *database.Database, bus *bus.EventBus) []api.Controller {
 	return []api.Controller{
 		update_userprofile.NewPutUserProfileController(update_userprofile.UpdateUserProfileRepository(*database), bus),
+		search_user.NewSearchUserController(search_user.NewSearchUserService(search_user.SearchUserRepository(*database))),
 	}
 }
 
